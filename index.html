@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura AI - Premium Text to Image & Video Agent</title>
+    <meta name="description" content="Aura AI is an agentic creative workspace to generate stunning images and cinematic videos from text. Refined by prompt engineering.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="glow-bg-secondary"></div>
+
+    <header class="app-header">
+        <div class="logo">
+            <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
+            <h1>Aura <span>AI</span></h1>
+        </div>
+        <div class="header-actions">
+            <button id="btn-settings-open" class="btn-secondary" title="API Configuration">
+                <i class="fa-solid fa-sliders"></i> Settings
+            </button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Sidebar: Configuration Panel -->
+        <aside class="sidebar">
+            <h2 class="section-title"><i class="fa-solid fa-gears"></i> Engine Settings</h2>
+            
+            <div class="control-group">
+                <label for="select-type">Creation Mode</label>
+                <div class="mode-selector">
+                    <button id="mode-image" class="mode-btn active" data-mode="image">
+                        <i class="fa-regular fa-image"></i> Image
+                    </button>
+                    <button id="mode-video" class="mode-btn" data-mode="video">
+                        <i class="fa-solid fa-clapperboard"></i> Video
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-group" id="group-image-provider">
+                <label for="select-image-provider">Image Engine</label>
+                <select id="select-image-provider">
+                    <option value="pollinations">Pollinations (Free, Fast)</option>
+                    <option value="huggingface">Hugging Face (FLUX.1-schnell)</option>
+                    <option value="replicate">Replicate (FLUX-Schnell)</option>
+                    <option value="fal">Fal.ai (FLUX-Schnell)</option>
+                </select>
+            </div>
+
+            <div class="control-group hidden" id="group-video-provider">
+                <label for="select-video-provider">Video Engine</label>
+                <select id="select-video-provider">
+                    <option value="fal">Fal.ai (Kling AI)</option>
+                    <option value="replicate">Replicate (CogVideoX)</option>
+                </select>
+            </div>
+
+            <div class="control-group" id="group-aspect-ratio">
+                <label for="select-aspect">Aspect Ratio</label>
+                <select id="select-aspect">
+                    <option value="1:1" data-w="1024" data-h="1024">1:1 Square (1024x1024)</option>
+                    <option value="16:9" data-w="1024" data-h="576">16:9 Landscape (1024x576)</option>
+                    <option value="9:16" data-w="576" data-h="1024">9:16 Portrait (576x1024)</option>
+                    <option value="4:3" data-w="1024" data-h="768">4:3 Standard (1024x768)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="select-style">Artistic Style Filter</label>
+                <select id="select-style">
+                    <option value="None">Default / None</option>
+                    <option value="Cinematic">Cinematic 35mm</option>
+                    <option value="Cyberpunk">Cyberpunk / Neon</option>
+                    <option value="Anime">Modern Anime</option>
+                    <option value="Fantasy">Epic Fantasy</option>
+                    <option value="3D Render">Unreal 3D Render</option>
+                </select>
+            </div>
+
+            <div class="status-indicator">
+                <div class="indicator-dot" id="api-status-dot"></div>
+                <span id="api-status-text">Using Pollinations (No API Key Required)</span>
+            </div>
+        </aside>
+
+        <!-- Center: Generator & Canvas Workspace -->
+        <section class="workspace">
+            <div class="workspace-main">
+                <!-- Sandbox Result Viewer -->
+                <div class="canvas-viewer">
+                    <div id="canvas-placeholder" class="canvas-placeholder">
+                        <i class="fa-solid fa-photo-film placeholder-icon animate-pulse"></i>
+                        <p class="placeholder-title">Aura Canvas Ready</p>
+                        <p class="placeholder-subtitle">Enter a prompt below and let the AI build your imagination</p>
+                    </div>
+
+                    <div id="canvas-loading" class="canvas-loading hidden">
+                        <div class="spinner-container">
+                            <div class="double-bounce1"></div>
+                            <div class="double-bounce2"></div>
+                        </div>
+                        <p id="loading-message">Generating pixels...</p>
+                        <div class="progress-bar-container hidden" id="video-progress-container">
+                            <div class="progress-bar" id="video-progress-bar"></div>
+                            <span id="video-progress-text">Elapsed: 0s (Estimated: 25-45s)</span>
+                        </div>
+                    </div>
+
+                    <div id="canvas-output" class="canvas-output hidden">
+                        <!-- Content will be injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- Input Sandbox -->
+                <div class="input-sandbox">
+                    <div class="prompt-wrapper">
+                        <textarea id="prompt-input" placeholder="A futuristic city in the clouds at sunset, highly detailed..." rows="3"></textarea>
+                        <button id="btn-enhance" class="btn-enhance" title="AI Prompt Enhancer">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Enhance</span>
+                        </button>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="btn-generate" class="btn-primary">
+                            <i class="fa-solid fa-circle-play"></i> Generate <span id="generate-type-label">Image</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Settings API Keys Configuration -->
+    <div id="modal-settings" class="modal hidden">
+        <div class="modal-content glassmorphism">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-key"></i> API Configuration</h2>
+                <button id="btn-settings-close-x" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="settings-help-text">
+                    API keys are stored strictly in your browser's local storage. They are never sent to external servers other than routing to the model endpoints.
+                </p>
+                
+                <div class="input-field">
+                    <label for="key-gemini">Gemini API Key <span class="label-desc">(Used for Prompt Enhancer)</span></label>
+                    <div class="key-input-container">
+                        <input type="password" id="key-gemini" placeholder="AIzaSy...">
+                        <button class="toggle-password"><i class="fa-regular fa-eye-slash"></i></button>
+                    </div>
+                </div>
+
+                <div class="input-field">
+                    <label for="key-huggingface">Hugging Face Token <span class="label-desc">(Used for HF Models)</span></label>
+                    <div class="key-input-container">
+                        <input type="password" id="key-huggingface" placeholder="hf_...">
+                        <button class="toggle-password"><i class="fa-regular fa-eye-slash"></i></button>
+                    </div>
+                </div>
+
+                <div class="input-field">
+                    <label for="key-replicate">Replicate API Token <span class="label-desc">(Used for Replicate Models)</span></label>
+                    <div class="key-input-container">
+                        <input type="password" id="key-replicate" placeholder="r8_...">
+                        <button class="toggle-password"><i class="fa-regular fa-eye-slash"></i></button>
+                    </div>
+                </div>
+
+                <div class="input-field">
+                    <label for="key-fal">Fal.ai API Key <span class="label-desc">(Used for Fal.ai Models)</span></label>
+                    <div class="key-input-container">
+                        <input type="password" id="key-fal" placeholder="fal_...">
+                        <button class="toggle-password"><i class="fa-regular fa-eye-slash"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-settings-clear" class="btn-danger">Clear All Keys</button>
+                <button id="btn-settings-save" class="btn-primary">Save Keys</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert / Toast Messages -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
